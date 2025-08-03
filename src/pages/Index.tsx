@@ -5,10 +5,18 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import Icon from '@/components/ui/icon';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedVenue, setSelectedVenue] = useState<any>(null);
+  const [showBookingDialog, setShowBookingDialog] = useState(false);
+  const [notification, setNotification] = useState('');
+  const [bookingVenue, setBookingVenue] = useState<any>(null);
 
   const venues = [
     {
@@ -21,7 +29,17 @@ const Index = () => {
       image: '/img/32e4a4aa-2e22-4fc4-8bbf-1c81c93782d8.jpg',
       tags: ['Европейская кухня', 'Романтично', 'Винная карта'],
       price: '$$',
-      isRecommended: true
+      isRecommended: true,
+      coordinates: { lat: 55.7558, lng: 37.6176 },
+      address: 'ул. Арбат, 15',
+      phone: '+7 (495) 123-45-67',
+      workingHours: '11:00 - 23:00',
+      description: 'Уютный ресторан европейской кухни с романтической атмосферой и отличной винной картой.',
+      userReviews: [
+        { id: 1, user: 'Анна К.', rating: 5, text: 'Потрясающая атмосфера! Очень вкусная еда и отличное обслуживание.', date: '2 дня назад' },
+        { id: 2, user: 'Михаил Р.', rating: 4, text: 'Хороший ресторан, но цены немного завышены. Качество на высоте.', date: '1 неделю назад' }
+      ],
+      availableTimes: ['18:00', '19:00', '20:00', '21:00']
     },
     {
       id: 2,
@@ -33,7 +51,17 @@ const Index = () => {
       image: '/img/79f11a7a-df1e-43ec-acdd-c9f6bfd1a22b.jpg',
       tags: ['IMAX', 'Премьеры', 'Комфорт+'],
       price: '$',
-      isRecommended: false
+      isRecommended: false,
+      coordinates: { lat: 55.7612, lng: 37.6155 },
+      address: 'Тверская ул., 12',
+      phone: '+7 (495) 987-65-43',
+      workingHours: '10:00 - 02:00',
+      description: 'Современный кинотеатр с IMAX залами и технологиями последнего поколения.',
+      userReviews: [
+        { id: 3, user: 'Елена М.', rating: 5, text: 'Отличный звук и картинка! Самый лучший кинотеатр в городе.', date: '3 дня назад' },
+        { id: 4, user: 'Дмитрий С.', rating: 4, text: 'Хорошие кресла, но попкорн дороговат. В целом рекомендую.', date: '5 дней назад' }
+      ],
+      availableTimes: ['15:00', '18:00', '21:00', '00:00']
     },
     {
       id: 3,
@@ -45,7 +73,17 @@ const Index = () => {
       image: '/img/95eea371-519f-4e26-92f7-91a4f4f50a6f.jpg',
       tags: ['VR', 'Ретро игры', 'Турниры'],
       price: '$',
-      isRecommended: true
+      isRecommended: true,
+      coordinates: { lat: 55.7522, lng: 37.6156 },
+      address: 'Никольская ул., 8',
+      phone: '+7 (495) 555-12-34',
+      workingHours: '12:00 - 02:00',
+      description: 'Игровая зона с VR-аттракционами, ретро-автоматами и регулярными турнирами.',
+      userReviews: [
+        { id: 5, user: 'Игорь В.', rating: 5, text: 'Невероятные VR-игры! Дети в восторге, да и сам отлично провел время.', date: '1 день назад' },
+        { id: 6, user: 'Мария Л.', rating: 5, text: 'Отличное место для компании. Много разных игр на любой вкус.', date: '4 дня назад' }
+      ],
+      availableTimes: ['14:00', '16:00', '18:00', '20:00']
     }
   ];
 
@@ -59,6 +97,11 @@ const Index = () => {
   });
 
   const recommendations = venues.filter(venue => venue.isRecommended);
+
+  const handleBookingOpen = (venue: any) => {
+    setBookingVenue(venue);
+    setShowBookingDialog(true);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -137,19 +180,18 @@ const Index = () => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {recommendations.map((venue) => (
-                <VenueCard key={venue.id} venue={venue} />
+                <VenueCard 
+                  key={venue.id} 
+                  venue={venue} 
+                  onViewDetails={() => setSelectedVenue(venue)}
+                  onBooking={() => handleBookingOpen(venue)}
+                />
               ))}
             </div>
           </TabsContent>
 
           <TabsContent value="map" className="mt-6">
-            <Card className="h-96 bg-muted flex items-center justify-center">
-              <div className="text-center">
-                <Icon name="Map" size={48} className="mx-auto mb-4 text-muted-foreground" />
-                <h4 className="text-lg font-semibold mb-2">Интерактивная карта</h4>
-                <p className="text-muted-foreground">Здесь будет отображаться карта с заведениями</p>
-              </div>
-            </Card>
+            <InteractiveMap venues={venues} onVenueSelect={setSelectedVenue} />
           </TabsContent>
 
           <TabsContent value="all" className="mt-6">
@@ -159,12 +201,55 @@ const Index = () => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredVenues.map((venue) => (
-                <VenueCard key={venue.id} venue={venue} />
+                <VenueCard 
+                  key={venue.id} 
+                  venue={venue} 
+                  onViewDetails={() => setSelectedVenue(venue)}
+                  onBooking={() => handleBookingOpen(venue)}
+                />
               ))}
             </div>
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Notification */}
+      {notification && (
+        <div className="fixed top-20 right-4 z-50 bg-secondary text-secondary-foreground px-4 py-2 rounded-lg shadow-lg animate-fade-in">
+          <div className="flex items-center space-x-2">
+            <Icon name="CheckCircle" size={16} />
+            <span>{notification}</span>
+            <button onClick={() => setNotification('')}>
+              <Icon name="X" size={16} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Venue Details Dialog */}
+      {selectedVenue && (
+        <VenueDetailsDialog 
+          venue={selectedVenue} 
+          isOpen={!!selectedVenue}
+          onClose={() => setSelectedVenue(null)}
+          onBooking={() => {
+            handleBookingOpen(selectedVenue);
+            setSelectedVenue(null);
+          }}
+        />
+      )}
+
+      {/* Booking Dialog */}
+      <BookingDialog 
+        isOpen={showBookingDialog}
+        onClose={() => setShowBookingDialog(false)}
+        venue={bookingVenue}
+        onSuccess={(message) => {
+          setNotification(message);
+          setShowBookingDialog(false);
+          setTimeout(() => setNotification(''), 3000);
+        }}
+      />
 
       {/* Mobile Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t md:hidden">
@@ -187,7 +272,311 @@ const Index = () => {
   );
 };
 
-const VenueCard = ({ venue }: { venue: any }) => {
+const InteractiveMap = ({ venues, onVenueSelect }: { venues: any[], onVenueSelect: (venue: any) => void }) => {
+  const [selectedMapVenue, setSelectedMapVenue] = useState<any>(null);
+
+  return (
+    <Card className="h-96 relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
+        <div className="relative w-full h-full">
+          {/* Map Background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-100 to-green-100" />
+          
+          {/* Venue Markers */}
+          {venues.map((venue, index) => (
+            <button
+              key={venue.id}
+              className="absolute transform -translate-x-1/2 -translate-y-1/2 transition-all duration-200 hover:scale-110"
+              style={{
+                left: `${30 + index * 25}%`,
+                top: `${40 + (index % 2) * 20}%`
+              }}
+              onClick={() => {
+                setSelectedMapVenue(venue);
+                onVenueSelect(venue);
+              }}
+            >
+              <div className="relative">
+                <div className={`w-8 h-8 rounded-full border-2 border-white shadow-lg flex items-center justify-center ${
+                  venue.category === 'Рестораны' ? 'bg-orange-500' :
+                  venue.category === 'Кино' ? 'bg-purple-500' :
+                  'bg-blue-500'
+                }`}>
+                  <Icon 
+                    name={
+                      venue.category === 'Рестораны' ? 'Utensils' :
+                      venue.category === 'Кино' ? 'Film' :
+                      'Gamepad2'
+                    } 
+                    size={16} 
+                    className="text-white" 
+                  />
+                </div>
+                {selectedMapVenue?.id === venue.id && (
+                  <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-background border rounded-lg px-2 py-1 shadow-lg whitespace-nowrap text-sm">
+                    <div className="font-medium">{venue.name}</div>
+                    <div className="text-xs text-muted-foreground">{venue.rating} ⭐</div>
+                  </div>
+                )}
+              </div>
+            </button>
+          ))}
+          
+          {/* Map Legend */}
+          <div className="absolute bottom-4 left-4 bg-background/90 backdrop-blur rounded-lg p-3 text-sm">
+            <div className="font-medium mb-2">Легенда</div>
+            <div className="space-y-1">
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 rounded-full bg-orange-500" />
+                <span>Рестораны</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 rounded-full bg-purple-500" />
+                <span>Кино</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 rounded-full bg-blue-500" />
+                <span>Развлечения</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+};
+
+const VenueDetailsDialog = ({ venue, isOpen, onClose, onBooking }: { 
+  venue: any; 
+  isOpen: boolean; 
+  onClose: () => void; 
+  onBooking: () => void;
+}) => {
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[90vh]">
+        <DialogHeader>
+          <DialogTitle className="text-2xl">{venue.name}</DialogTitle>
+        </DialogHeader>
+        <ScrollArea className="max-h-[70vh]">
+          <div className="space-y-6">
+            <img 
+              src={venue.image} 
+              alt={venue.name} 
+              className="w-full h-48 object-cover rounded-lg" 
+            />
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <h4 className="font-semibold mb-2">Информация</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center space-x-2">
+                    <Icon name="MapPin" size={16} className="text-muted-foreground" />
+                    <span>{venue.address}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Icon name="Phone" size={16} className="text-muted-foreground" />
+                    <span>{venue.phone}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Icon name="Clock" size={16} className="text-muted-foreground" />
+                    <span>{venue.workingHours}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Icon name="Star" size={16} className="text-yellow-500" />
+                    <span>{venue.rating} ({venue.reviews} отзывов)</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="font-semibold mb-2">Категории</h4>
+                <div className="flex flex-wrap gap-1">
+                  {venue.tags.map((tag: string) => (
+                    <Badge key={tag} variant="secondary" className="text-xs">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            </div>
+            
+            <div>
+              <p className="text-muted-foreground">{venue.description}</p>
+            </div>
+            
+            <Separator />
+            
+            <div>
+              <h4 className="font-semibold mb-4">Отзывы пользователей</h4>
+              <div className="space-y-4">
+                {venue.userReviews.map((review: any) => (
+                  <div key={review.id} className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                          <Icon name="User" size={16} />
+                        </div>
+                        <span className="font-medium">{review.user}</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="flex">
+                          {[...Array(5)].map((_, i) => (
+                            <Icon 
+                              key={i} 
+                              name="Star" 
+                              size={14} 
+                              className={i < review.rating ? 'text-yellow-500' : 'text-muted-foreground'} 
+                            />
+                          ))}
+                        </div>
+                        <span className="text-xs text-muted-foreground">{review.date}</span>
+                      </div>
+                    </div>
+                    <p className="text-sm">{review.text}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </ScrollArea>
+        
+        <div className="flex space-x-2 pt-4 border-t">
+          <Button onClick={onBooking} className="flex-1">
+            <Icon name="Calendar" size={16} className="mr-2" />
+            Забронировать
+          </Button>
+          <Button variant="outline">
+            <Icon name="Navigation" size={16} className="mr-2" />
+            Маршрут
+          </Button>
+          <Button variant="outline">
+            <Icon name="Heart" size={16} />
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const BookingDialog = ({ isOpen, onClose, venue, onSuccess }: {
+  isOpen: boolean;
+  onClose: () => void;
+  venue: any;
+  onSuccess: (message: string) => void;
+}) => {
+  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedTime, setSelectedTime] = useState('');
+  const [guestCount, setGuestCount] = useState('2');
+  const [specialRequests, setSpecialRequests] = useState('');
+
+  const handleBooking = () => {
+    if (!selectedDate || !selectedTime) {
+      return;
+    }
+    
+    onSuccess(`Бронирование на ${selectedDate} в ${selectedTime} подтверждено!`);
+    onClose();
+    
+    // Reset form
+    setSelectedDate('');
+    setSelectedTime('');
+    setGuestCount('2');
+    setSpecialRequests('');
+  };
+
+  const today = new Date().toISOString().split('T')[0];
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Бронирование столика</DialogTitle>
+        </DialogHeader>
+        
+        <div className="space-y-4">
+          {venue && (
+            <div className="bg-muted p-3 rounded-lg">
+              <div className="font-medium">{venue.name}</div>
+              <div className="text-sm text-muted-foreground">{venue.address}</div>
+            </div>
+          )}
+          
+          <div>
+            <label className="text-sm font-medium">Дата</label>
+            <Input 
+              type="date" 
+              value={selectedDate}
+              min={today}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="mt-1"
+            />
+          </div>
+          
+          <div>
+            <label className="text-sm font-medium">Время</label>
+            <div className="grid grid-cols-2 gap-2 mt-1">
+              {venue?.availableTimes?.map((time: string) => (
+                <Button
+                  key={time}
+                  variant={selectedTime === time ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setSelectedTime(time)}
+                  className="w-full"
+                >
+                  {time}
+                </Button>
+              ))}
+            </div>
+          </div>
+          
+          <div>
+            <label className="text-sm font-medium">Количество гостей</label>
+            <Input 
+              type="number" 
+              value={guestCount}
+              onChange={(e) => setGuestCount(e.target.value)}
+              min="1"
+              max="10"
+              className="mt-1"
+            />
+          </div>
+          
+          <div>
+            <label className="text-sm font-medium">Особые пожелания</label>
+            <Textarea 
+              value={specialRequests}
+              onChange={(e) => setSpecialRequests(e.target.value)}
+              placeholder="Укажите особые пожелания..."
+              className="mt-1"
+              rows={3}
+            />
+          </div>
+        </div>
+        
+        <div className="flex space-x-2 pt-4">
+          <Button 
+            onClick={handleBooking}
+            disabled={!selectedDate || !selectedTime}
+            className="flex-1"
+          >
+            <Icon name="Check" size={16} className="mr-2" />
+            Подтвердить
+          </Button>
+          <Button variant="outline" onClick={onClose}>
+            Отмена
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const VenueCard = ({ venue, onViewDetails, onBooking }: { 
+  venue: any; 
+  onViewDetails: () => void;
+  onBooking: () => void;
+}) => {
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-105">
       <div className="relative">
@@ -230,15 +619,15 @@ const VenueCard = ({ venue }: { venue: any }) => {
           ))}
         </div>
         <div className="flex space-x-2">
-          <Button size="sm" className="flex-1">
-            <Icon name="Navigation" size={14} className="mr-2" />
-            Маршрут
+          <Button size="sm" onClick={onViewDetails} className="flex-1">
+            <Icon name="Eye" size={14} className="mr-2" />
+            Подробнее
+          </Button>
+          <Button size="sm" variant="outline" onClick={onBooking}>
+            <Icon name="Calendar" size={14} />
           </Button>
           <Button size="sm" variant="outline">
             <Icon name="Heart" size={14} />
-          </Button>
-          <Button size="sm" variant="outline">
-            <Icon name="Share" size={14} />
           </Button>
         </div>
       </CardContent>
